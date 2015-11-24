@@ -23,7 +23,7 @@
 		}, function(err) {
 			throw(err);
 		}, this);
-	}
+	};
 
 	function xhr(type, url, data, success, error, thisArg) {
 		var XHR = root.XMLHttpRequest || ActiveXObject;
