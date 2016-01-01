@@ -1,6 +1,7 @@
 (function(root) {
 	var MINUTE_IN_MS = 60*1000,
 		DAY_IN_MS = 24*60*MINUTE_IN_MS,
+		SEQUENCE_START_INDEX = 1,
 		EVENT_TABLE = "event",
 		PERSON_TABLE = "person",
 		LOCATION_TABLE = "location",
@@ -20,6 +21,7 @@
 				getID: "_id",
 				getDescription: "description",
 				getIcon: "icon",
+				getIconURL: "icon_url",
 				getName: "name",
 				getType: "type",
 				getSequence: "sequence"
@@ -187,6 +189,7 @@
 				getDescription: "description",
 				getSequence: "sequence",
 				getMapName: "map_name",
+				getMapURL: "map_url",
 				getMapFile: "map_file"
 			};
 		each(optionGetters, function(prop_name, fn_name) {
@@ -521,7 +524,7 @@
 
 			each(ep_rows, function(row) {
 				if(row[ep_headers.event_fk] === event_fk) {
-					person_fks[row[ep_headers.sequence]] = row[ep_headers.person_fk];
+					person_fks[row[ep_headers.sequence]-SEQUENCE_START_INDEX] = row[ep_headers.person_fk];
 				}
 			});
 
@@ -584,7 +587,7 @@
 				if(row[ee_headers.parent_fk] === parent_fk) {
 					var sequence = row[ee_headers.sequence],
 						child_fk = row[ee_headers.child_fk];
-					child_fks[sequence] = child_fk;
+					child_fks[sequence-SEQUENCE_START_INDEX] = child_fk;
 					count++;
 					if(limit && count > limit) {
 						return DO_BREAK;
