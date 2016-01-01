@@ -770,6 +770,7 @@
 			if(callback) {
 				database.onLoad(callback, thisArg);
 			}
+			return database;
 		}
 	};
 
