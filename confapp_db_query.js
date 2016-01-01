@@ -205,7 +205,7 @@
 		};
 	}(ConfAppLocation));
 
-	var ConfAppDB = function(db_url) {
+	var ConfAppDB = function(options) {
 		this._loaded = false;
 		this._loaded_callbacks = [];
 
@@ -220,17 +220,19 @@
 
 		this._firstNSearchResults = {};
 
-		xhr('GET', db_url, false, function(response) {
-			this._onDataFetched(JSON.parse(response));
-		}, function(err) {
-			incJS(db_url+"p", function() {
-				if(root.hasOwnProperty(JSONP_DATA_VAR_NAME)) {
-					this._onDataFetched(root[JSONP_DATA_VAR_NAME]);
-				} else {
-					throw new Error(err);
-				}
+		if(options.url) {
+			xhr('GET', options.url, false, function(response) {
+				this._onDataFetched(JSON.parse(response));
+			}, function(err) {
+				incJS(options.url+"p", function() {
+					if(root.hasOwnProperty(JSONP_DATA_VAR_NAME)) {
+						this._onDataFetched(root[JSONP_DATA_VAR_NAME]);
+					} else {
+						throw new Error(err);
+					}
+				}, this);
 			}, this);
-		}, this);
+		}
 	};
 
 	(function(My) {
@@ -745,11 +747,29 @@
 		Person: ConfAppPerson,
 		Location: ConfAppLocation,
 		loadDatabase: function(db_url, callback, thisArg) {
-			var database = new ConfAppDB(db_url);
+			var database = new ConfAppDB({
+				url: db_url
+			});
 			if(callback) {
 				database.onLoad(callback, thisArg);
 			}
 			return database;
+		},
+		loadFirebaseDatabase: function(conference_id, callback, thisArg) {
+			var database = new ConfAppDB({}),
+				ref = new Firebase('https://confapp-data-sync.firebaseio.com/')
+							.child('conferences')
+							.child(conference_id)
+							.child('currentJSONDatabase');
+
+			ref.once('value', function(dataSnapshot) {
+				var jsonData = dataSnapshot.val();
+				database._onDataFetched(jsonData);
+			});
+
+			if(callback) {
+				database.onLoad(callback, thisArg);
+			}
 		}
 	};
 
