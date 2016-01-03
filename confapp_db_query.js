@@ -760,14 +760,35 @@
 		},
 		loadFirebaseDatabase: function(conference_id, callback, thisArg) {
 			var database = new ConfAppDB({}),
-				ref = new Firebase('https://confapp-data-sync.firebaseio.com/')
+				conferenceRef = new Firebase('https://confapp-data-sync.firebaseio.com/')
 							.child('conferences')
-							.child(conference_id)
-							.child('currentJSONDatabase');
+							.child(conference_id);
 
-			ref.once('value', function(dataSnapshot) {
-				var jsonData = dataSnapshot.val();
-				database._onDataFetched(jsonData);
+			function doGetCurrentJSONDB(dbVersion) {
+				conferenceRef.child('currentJSONDatabase').once('value', function(dataSnapshot) {
+					var jsonData = dataSnapshot.val();
+					database._onDataFetched(jsonData);
+
+					if(dbVersion) {
+						store.set('conferenceID', conference_id);
+						store.set('dbVersion', dbVersion);
+						store.set('conferenceDatabase', jsonData);
+					}
+				});
+			}
+
+			conferenceRef.child('currentDatabaseVersion').once('value', function(dataSnapshot) {
+				var dbVersion = dataSnapshot.val();
+				if(store.get('conferenceID') === conference_id && store.get('dbVersion') === dbVersion &&
+					store.get('conferenceDatabase')) {
+					var data = store.get('conferenceDatabase');
+					database._onDataFetched(data);
+					console.info('Loading Cached Database');
+				} else {
+					doGetCurrentJSONDB(dbVersion);
+				}
+			}, function(err) {
+				doGetCurrentJSONDB();
 			});
 
 			if(callback) {
