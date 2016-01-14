@@ -465,7 +465,14 @@
 				sessions = this.filterSessions(time_filter_fn);
 
 			sessions.sort(function(a, b) {
-				return a.getStartTimestamp() - b.getStartTimestamp();
+				var aStartTimestamp = a.getStartTimestamp(),
+					bStartTimestamp = b.getStartTimestamp();
+
+				if(aStartTimestamp === bStartTimestamp) {
+					return a.getEndTimestamp() - b.getEndTimestamp();
+				} else {
+					return aStartTimestamp - bStartTimestamp;
+				}
 			});
 
 			return sessions;
