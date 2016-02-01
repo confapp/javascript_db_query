@@ -767,13 +767,11 @@
 		},
 		loadFirebaseDatabase: function(conference_id, callback, thisArg) {
 			var database = new ConfAppDB({}),
-				conferenceRef = new Firebase('https://confapp-data-sync.firebaseio.com/')
-							.child('deployed_databases')
-							.child(conference_id)
-							.child('database');
+				ref = new Firebase('https://confapp-data-sync.firebaseio.com/'),
+				conferenceRef = ref.child('deployed_databases').child(conference_id);
 
 			function doGetCurrentJSONDB(dbVersion) {
-				conferenceRef.child('currentJSONDatabase').once('value', function(dataSnapshot) {
+				conferenceRef.child('database').once('value', function(dataSnapshot) {
 					var jsonData = dataSnapshot.val();
 					database._onDataFetched(jsonData);
 
