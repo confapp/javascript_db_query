@@ -223,6 +223,9 @@
 
 		this._firstNSearchResults = {};
 
+		this._firebaseRef = options.firebaseRef;
+		this._conference_id = options.conferenceID;
+
 		if(options.url) {
 			xhr('GET', options.url, false, function(response) {
 				this._onDataFetched(JSON.parse(response));
@@ -245,10 +248,18 @@
 			this._data = data;
 			this._loaded = true;
 
-			each(this._loaded_callbacks, function(callback_info) {
-				callback_info.fn.call(callback_info.thisArg, this);
-			}, this);
-			this._loaded_callbacks = [];
+			var doCallbacks = function() {
+				each(this._loaded_callbacks, function(callback_info) {
+					callback_info.fn.call(callback_info.thisArg, this);
+				}, this);
+				this._loaded_callbacks = [];
+			};
+
+			if(false && this._firebaseRef) { // TODO: fix
+				this.userData = new UserData(this._firebaseRef, this._conference_id, true, doCallbacks, this);
+			} else {
+				doCallbacks.call(this);
+			}
 		};
 
 		function getCacheGetter(table_name, fk_map_name, Constructor) {
@@ -766,9 +777,20 @@
 			return database;
 		},
 		loadFirebaseDatabase: function(conference_id, callback, thisArg) {
-			var database = new ConfAppDB({}),
-				ref = new Firebase('https://confapp-data-sync.firebaseio.com/'),
-				conferenceRef = ref.child('deployed_databases').child(conference_id);
+			var config = {
+			    apiKey: "AIzaSyC0rxn5Oipwn0mH8gjV0DjqebTfwmeQm-U",
+			    authDomain: "confapp-data-sync.firebaseapp.com",
+			    databaseURL: "https://confapp-data-sync.firebaseio.com",
+			    storageBucket: "confapp-data-sync.appspot.com",
+			};
+			fireApp = firebase.initializeApp(config);
+
+			var ref = fireApp.database().ref(),
+				conferenceRef = ref.child('deployed_databases').child(conference_id),
+				database = new ConfAppDB({
+					firebaseRef: conferenceRef,
+					conferenceID: conference_id
+				});
 
 			function doGetCurrentJSONDB(dbVersion) {
 				conferenceRef.child('database').once('value', function(dataSnapshot) {

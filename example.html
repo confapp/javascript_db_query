@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="   crossorigin="anonymous"></script>
+		<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase.js"></script>
+		<script type="text/javascript" src="bower_components/store-js/store.js"></script>
+		<script type="text/javascript" src="src/confapp_db_query.js"></script>
+		<script type="text/javascript" src="src/user_data.js"></script>
+	</head>
+	<body>
+	</body>
+	<script type="text/javascript">
+		var database = confApp.loadFirebaseDatabase('uist_2016', function(database) {
+			var conferenceInfo = database.getConferenceInfo();
+			$('<h1>').text(conferenceInfo.name).appendTo(document.body);
+
+			var dayTimestamps = database.getDayTimestamps();
+
+			dayTimestamps.map(function(dayTimestamp) {
+				var daySessions = database.getDaySessions(dayTimestamp);
+
+				$('<h2>').text(new Date(dayTimestamp)).appendTo(document.body);
+				daySessions.map(function(session) {
+					$('<h3>').text(session.getName()).appendTo(document.body)
+					$('<div />').text(session.getType()).appendTo(document.body);
+					$('<div />').text('Location: ' + session.getLocation()).appendTo(document.body);
+
+					var people = session.getPeople();
+					if(people.length > 0) {
+						var names = people.map(function(person) {
+							return person.getName()+' ('+person.getAffiliation()+')'
+						});
+						$('<div />').text(session.getPersonDemonym()+': ' + names.join(', ')).appendTo(document.body);
+					}
+
+					if(session.getDescription()) {
+						$('<p />').text(session.getDescription()).appendTo(document.body);
+					}
+
+					var subEvents = session.getSubEvents();
+
+					subEvents.map(function(subEvent) {
+						$('<h4>').text(subEvent.getName()).appendTo(document.body)
+						$('<div />').text(subEvent.getType()).appendTo(document.body);
+						$('<div />').text('Location: ' + subEvent.getLocation()).appendTo(document.body);
+
+						var people = subEvent.getPeople();
+
+						var names = people.map(function(person) {
+							return person.getName()+' ('+person.getAffiliation()+')'
+						});
+						$('<div />').text(subEvent.getPersonDemonym()+': ' + names.join(', ')).appendTo(document.body);
+						$('<p />').text(subEvent.getDescription()).appendTo(document.body);
+					});
+					$('<hr>').appendTo(document.body);
+				});
+			});
+		});
+	</script>
+</html>
